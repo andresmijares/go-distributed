@@ -40,8 +40,9 @@ type Authorizer interface {
 }
 
 type Config struct {
-	CommitLog  CommitLog
-	Authorizer Authorizer
+	CommitLog   CommitLog
+	Authorizer  Authorizer
+	GetServerer GetServerer
 }
 
 var _ log_v1.LogServer = (*grpcServer)(nil)
@@ -177,6 +178,18 @@ func (s *grpcServer) ConsumeStream(req *log_v1.ConsumeRequest, stream log_v1.Log
 			req.Offset++
 		}
 	}
+}
+
+func (s *grpcServer) GetServers(ctx context.Context, req *log_v1.GetServersRequest) (*log_v1.GetServersResponse, error) {
+	servers, err := s.GetServerer.GetServers()
+	if err != nil {
+		return nil, err
+	}
+	return &log_v1.GetServersResponse{Servers: servers}, nil
+}
+
+type GetServerer interface {
+	GetServers() ([]*log_v1.Server, error)
 }
 
 func authenticate(ctx context.Context) (context.Context, error) {
